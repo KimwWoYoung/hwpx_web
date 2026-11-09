@@ -2,7 +2,7 @@ services:
   - type: web
     name: hwtx-report
     runtime: docker
-    plan: starter
+    plan: free
     region: singapore
     healthCheckPath: /api/config
     envVars:
