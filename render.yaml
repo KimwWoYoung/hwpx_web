@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: hwtx-report
+    runtime: docker
+    plan: starter
+    region: singapore
+    healthCheckPath: /api/config
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
+      - key: HWTX_MODEL
+        value: claude-opus-5-5

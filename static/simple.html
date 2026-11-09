@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>보고서 만들기</title>
+<style>
+:root{--ink:#1f2430;--sub:#5d6575;--line:#e3e1dc;--bg:#f7f6f3;--navy:#2c436e;--navy2:#e9edf5;--red:#b42318;--red2:#fdecea;--amber2:#fff6db;--green:#1a7f37;--green2:#e7f5ec}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:22px;margin:0 0 4px}.lead{color:var(--sub);margin:0 0 26px}
+.files{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.files{grid-template-columns:1fr}}
+.drop{background:#fff;border:1.5px dashed #c9c5bd;border-radius:12px;padding:18px 14px;text-align:center;cursor:pointer;min-height:120px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.drop:hover,.drop.over{border-color:var(--navy);background:#fbfcff}
+.drop.ok{border-style:solid;border-color:var(--green);background:#f6fbf7}
+.drop .ic{font-size:24px}.drop b{font-size:14px}.drop small{color:var(--sub);font-size:12px;word-break:break-all}
+.drop input{display:none}
+.opt{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:16px;display:none}
+.opt .t{font-size:13px;color:var(--sub);margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid #d6d3cc;border-radius:16px;padding:4px 12px;font-size:13px;cursor:pointer;background:#fff;user-select:none}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip .o{font-weight:700;margin-right:4px}
+.go{width:100%;margin-top:18px;padding:15px;border:0;border-radius:12px;background:var(--navy);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.go:disabled{opacity:.4;cursor:default}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:18px;display:none}
+.bar{height:8px;background:#eee;border-radius:4px;overflow:hidden;margin:10px 0 6px}.bar i{display:block;height:100%;background:var(--navy);width:0;transition:width .4s}
+.steps{font-size:13px;color:var(--sub)}
+.steps div.on{color:var(--ink);font-weight:600}.steps div.ok{color:var(--green)}
+.dl{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.dl button{border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:9px;padding:10px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+.dl button.main{background:var(--navy);color:#fff;font-weight:700}
+.box{border-radius:9px;padding:10px 12px;font-size:13px;margin-top:8px}
+.box.green{background:var(--green2);color:var(--green)}.box.red{background:var(--red2);color:var(--red)}.box.amber{background:var(--amber2);color:#6b4b00}
+details{margin-top:8px;font-size:13px}summary{cursor:pointer;color:var(--sub)}
+.foot{margin-top:28px;font-size:12px;color:var(--sub);text-align:center}.foot a{color:var(--sub)}
+.err{color:var(--red);font-size:13px;margin-top:10px;white-space:pre-wrap}
+.modal{position:fixed;inset:0;background:rgba(20,24,32,.55);display:none;align-items:center;justify-content:center}
+.modal .in{background:#fff;border-radius:12px;padding:24px;width:320px}
+.modal input{width:100%;padding:9px;border:1px solid #ccc;border-radius:8px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>보고서 만들기</h1>
+  <p class="lead">파일 세 개를 넣고 버튼을 누르면, 분석문구·통계표·그래프가 들어간 한글 보고서가 나옵니다.</p>
+
+  <div class="files">
+    <label class="drop" data-k="template"><span class="ic">📄</span><b>양식 한글</b><small>.hwpx / .hwtx</small><input type="file" accept=".hwpx,.hwtx"></label>
+    <label class="drop" data-k="graph_template"><span class="ic">📊</span><b>그래프 PPT 양식</b><small>.pptx</small><input type="file" accept=".pptx"></label>
+    <label class="drop" data-k="excel"><span class="ic">📋</span><b>통계표 엑셀</b><small>.xlsx</small><input type="file" accept=".xlsx"></label>
+  </div>
+
+  <div class="opt" id="opt">
+    <div class="t" id="optT"></div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <button class="go" id="go" disabled>보고서 만들기</button>
+  <div class="err" id="err"></div>
+
+  <div class="card" id="prog">
+    <b id="stepT">준비 중…</b><span id="elap" style="float:right;color:var(--sub);font-size:12px"></span>
+    <div class="bar"><i id="barI"></i></div>
+    <div class="steps" id="steps"></div>
+  </div>
+
+  <div class="card" id="res"></div>
+  <div class="foot">세부 조정(문구 하나씩 고치기, 손본 보고서 다시 쓰기, 사람이 쓴 보고서 검증)은 <a href="/pro">상세 화면</a>에서</div>
+</div>
+<div class="modal" id="login"><div class="in"><b>팀 비밀번호</b><input type="password" id="pw" style="margin-top:10px"><button class="go" id="pwGo" style="margin-top:12px;padding:10px">들어가기</button></div></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let PW=(()=>{try{return sessionStorage.getItem('hwtx_pw')||''}catch(e){return''}})(),SID=null,GOT={},GROUPS={},CHOSEN=[],SAMPLE=null,CFG={};
+async function api(path,opt={}){opt.headers=Object.assign({},opt.headers||{},PW?{'X-App-Password':PW}:{});
+  if(opt.json!==undefined){opt.body=JSON.stringify(opt.json);opt.headers['Content-Type']='application/json';delete opt.json}
+  const r=await fetch(path,opt);if(r.status===401){$('#login').style.display='flex';throw new Error('비밀번호가 필요합니다')}
+  if(!r.ok){let m=r.statusText;try{m=(await r.json()).error||m}catch(e){}throw new Error(m)}
+  return (r.headers.get('content-type')||'').includes('json')?r.json():r}
+async function download(name){try{const r=await api(`/api/s/${SID}/download/${encodeURIComponent(name)}`);const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click()}catch(e){$('#err').textContent=e.message}}
+async function dlx(){try{const r=await api(`/api/s/${SID}/review.xlsx`);const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='검증결과.xlsx';a.click()}catch(e){$('#err').textContent=e.message}}
+
+$$('.drop').forEach(d=>{const inp=d.querySelector('input');
+  d.ondragover=e=>{e.preventDefault();d.classList.add('over')};d.ondragleave=()=>d.classList.remove('over');
+  d.ondrop=e=>{e.preventDefault();d.classList.remove('over');e.dataTransfer.files[0]&&up(d.dataset.k,e.dataTransfer.files[0])};
+  inp.onchange=()=>inp.files[0]&&up(d.dataset.k,inp.files[0])});
+
+async function up(k,f){$('#err').textContent='';const d=$(`.drop[data-k=${k}]`);d.querySelector('small').textContent='올리는 중…';
+  try{if(!SID)SID=(await api('/api/session',{method:'POST'})).sid;
+    const fd=new FormData();fd.append('file',f);await api(`/api/s/${SID}/file/${k}`,{method:'POST',body:fd});
+    GOT[k]=f.name;d.classList.add('ok');d.querySelector('small').textContent='✓ '+f.name;
+    if(GOT.excel&&GOT.template)await prepare();
+  }catch(e){d.classList.remove('ok');d.querySelector('small').textContent='다시 올려 주세요';$('#err').textContent=e.message}
+  $('#go').disabled=!(GOT.excel&&GOT.template);
+}
+async function prepare(){const r=await api(`/api/s/${SID}/prepare`,{method:'POST'});GROUPS=r.groups;CHOSEN=r.chosen;SAMPLE=r.sample;
+  $('#opt').style.display='block';
+  $('#optT').innerHTML=(SAMPLE?`양식 예시 표: <b>&lt;표${esc(SAMPLE)}&gt; ${esc(r.sample_title)}</b> · `:'<span style="color:#b42318">양식에서 예시 표를 못 찾았습니다</span> · ')+`특성별 결과 구분 (누른 순서대로 문단이 써집니다)`;
+  chips()}
+function chips(){$('#chips').innerHTML=Object.keys(GROUPS).map(g=>{const i=CHOSEN.indexOf(g);return `<span class="chip ${i>=0?'on':''}" data-g="${esc(g)}">${i>=0?`<span class="o">${i+1}</span>`:''}${esc(g)}</span>`}).join('');
+  $$('.chip').forEach(c=>c.onclick=()=>{const g=c.dataset.g,i=CHOSEN.indexOf(g);i>=0?CHOSEN.splice(i,1):CHOSEN.push(g);chips()})}
+
+const STEPS=['분석문구 작성 (AI)','한글 보고서 만들기','그래프 PPT 만들기','그래프를 한글에 넣기','검증 (숫자 대조·규칙 점검)'];
+$('#go').onclick=async()=>{$('#err').textContent='';if(!CHOSEN.length){$('#err').textContent='특성별 결과 구분을 하나 이상 고르세요';return}
+  $('#go').disabled=true;$('#res').style.display='none';$('#prog').style.display='block';
+  try{await api(`/api/s/${SID}/run`,{method:'POST',json:{groups:CHOSEN,sample:SAMPLE}});poll()}catch(e){$('#err').textContent=e.message;$('#go').disabled=false}};
+async function poll(){let J;try{J=await api(`/api/s/${SID}/run`)}catch(e){setTimeout(poll,2000);return}
+  const idx=STEPS.indexOf(J.step);const steps=GOT.graph_template?STEPS:STEPS.filter(s=>!s.includes('그래프'));
+  $('#stepT').textContent=J.step+(J.total?` ${J.done}/${J.total}`:'');$('#elap').textContent=J.elapsed+'초';
+  const k=J.status==='done'?steps.length:Math.max(0,steps.indexOf(J.step));const frac=(k+(J.total?J.done/J.total:0))/steps.length;
+  $('#barI').style.width=Math.min(100,frac*100)+'%';
+  $('#steps').innerHTML=steps.map((s,i)=>`<div class="${i<k||J.status==='done'?'ok':i===k?'on':''}">${i<k||J.status==='done'?'✓':i===k?'›':'·'} ${s}</div>`).join('');
+  if(J.status==='running'){setTimeout(poll,1500);return}
+  $('#go').disabled=false;
+  if(J.status==='error'){$('#err').textContent='만들지 못했습니다: '+J.error;return}
+  show(J)}
+function show(J){const o=J.outputs||{},rv=J.review||{};const fin=o.final||o.report;
+  let h=`<b style="font-size:16px">완성</b><div class="dl">${fin?`<button class="main" onclick="download('${esc(fin.file)}')">⬇ 한글 보고서</button>`:''}${o.graphs?`<button onclick="download('${esc(o.graphs.file)}')">⬇ 그래프 PPT</button>`:''}<button onclick="dlx()">⬇ 검증 결과 엑셀</button></div>`;
+  h+=`<div class="box ${rv.ok&&!rv.errors?'green':'red'}">숫자 대조: ${esc(rv.summary||'')}${rv.errors?` · 확인이 필요한 오류 ${rv.errors}건 (검증 결과 엑셀 참고)`:''}</div>`;
+  if(J.graphs)h+=`<div class="box ${J.graphs.missing?'amber':'green'}">그래프 ${J.graphs.inserted}개 넣음${J.graphs.missing?` · 맞는 슬라이드를 못 찾은 그래프 박스 ${J.graphs.missing}개`:''}</div>`;
+  h+=`<div class="box ${J.ai_count?'green':'amber'}">${J.ai_count?`분석문구 ${J.ai_count}개 표를 AI가 작성`:'AI 키가 없어 규칙 문구로 작성'}</div>`;
+  const notes=(J.problems||[]).map(x=>'수치 확인: '+x).concat(J.notes||[]).concat(J.warn||[]);
+  if(notes.length)h+=`<details><summary>연구원이 확인할 점 ${notes.length}건</summary><div class="box amber">${notes.map(esc).join('<br>')}</div></details>`;
+  if(rv.unmatched&&rv.unmatched.length)h+=`<div class="box amber">엑셀 표와 연결 못 한 페이지: ${rv.unmatched.map(esc).join(', ')}</div>`;
+  h+=`<div style="font-size:12px;color:var(--sub);margin-top:10px">한글에서 한 번 열어 저장하면 줄 배치가 정리됩니다.</div>`;
+  $('#res').innerHTML=h;$('#res').style.display='block'}
+$('#pwGo').onclick=async()=>{PW=$('#pw').value;try{await api('/api/login',{method:'POST'});try{sessionStorage.setItem('hwtx_pw',PW)}catch(e){}$('#login').style.display='none'}catch(e){alert(e.message)}};
+(async()=>{try{CFG=await api('/api/config');if(CFG.password&&!PW)$('#login').style.display='flex'}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>보고서 작업 도우미</title>
+<style>
+:root{--ink:#1f2430;--sub:#5d6575;--line:#e3e1dc;--bg:#f7f6f3;--card:#fff;--navy:#2c436e;--navy2:#e9edf5;--red:#b42318;--red2:#fdecea;--amber:#9a6700;--amber2:#fff6db;--green:#1a7f37;--green2:#e7f5ec}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.55}
+header{background:var(--navy);color:#fff;padding:14px 28px;display:flex;align-items:center;gap:18px}
+header h1{font-size:17px;margin:0;font-weight:700}
+header .meta{margin-left:auto;font-size:12px;opacity:.85}
+nav{display:flex;gap:2px;padding:0 28px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{border:0;background:none;padding:13px 16px;font-size:14px;color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit}
+nav button.on{color:var(--navy);border-color:var(--navy);font-weight:700}
+nav button .n{display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--sub);font-size:11px;line-height:20px;text-align:center;margin-right:6px}
+nav button.on .n{background:var(--navy);color:#fff}
+main{max-width:1180px;margin:0 auto;padding:22px 28px 80px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 4px}.card .desc{color:var(--sub);font-size:13px;margin:0 0 14px}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:860px){.g2,.g4{grid-template-columns:1fr}}
+.drop{border:1.5px dashed #c9c5bd;border-radius:9px;padding:14px;cursor:pointer;background:#fcfbf9;min-height:86px;position:relative}
+.drop:hover{border-color:var(--navy)}
+.drop b{display:block;font-size:13px}.drop small{color:var(--sub);font-size:12px}
+.drop .ok{color:var(--green);font-size:12px;margin-top:6px;word-break:break-all}
+.drop input{display:none}
+.req::after{content:" 필수";color:var(--red);font-size:11px;font-weight:400}
+label.f{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+select,input[type=text],input[type=number],input[type=password],textarea{width:100%;border:1px solid #d6d3cc;border-radius:7px;padding:7px 9px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+textarea{resize:vertical;line-height:1.6}
+button.b{border:1px solid var(--navy);background:var(--navy);color:#fff;border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap}
+button.b.ghost{background:#fff;color:var(--navy)}
+button.b.sm{padding:4px 10px;font-size:12px}
+button.b:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.t th{background:#f2f0ec;font-weight:600;color:var(--sub);position:sticky;top:0}
+.scroll{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;background:var(--navy2);color:var(--navy);margin-right:3px}
+.tag.red{background:var(--red2);color:var(--red)}.tag.amber{background:var(--amber2);color:var(--amber)}.tag.green{background:var(--green2);color:var(--green)}.tag.gray{background:#eee;color:#666}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid #d6d3cc;border-radius:8px;padding:7px 10px;background:#fff;display:flex;align-items:center;gap:6px;font-size:13px}
+.chip.on{border-color:var(--navy);background:var(--navy2)}
+.chip .ord{font-weight:700;color:var(--navy);min-width:14px}
+.chip small{color:var(--sub)}
+.chip button{border:0;background:none;cursor:pointer;color:var(--sub);padding:0 2px;font-size:12px}
+.tcard{border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:12px}
+.tcard .hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.tcard .hd b{font-size:13.5px}
+.tcard .bd{padding:12px 14px;display:none}
+.tcard.open .bd{display:block}
+.vals{font-size:12px;color:var(--sub);margin-bottom:8px}
+.vals span{display:inline-block;margin-right:10px}
+.box{border-radius:8px;padding:9px 11px;font-size:12.5px;margin:8px 0}
+.box.red{background:var(--red2);color:var(--red)}.box.amber{background:var(--amber2);color:#6b4b00}.box.gray{background:#f2f0ec;color:#444}.box.green{background:var(--green2);color:var(--green)}
+.prog{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin:8px 0}
+.prog i{display:block;height:100%;background:var(--navy);width:0;transition:width .3s}
+pre.log{background:#1f2430;color:#d8dee9;font-size:11.5px;padding:10px 12px;border-radius:8px;max-height:240px;overflow:auto;white-space:pre-wrap}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1f2430;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:none;z-index:50;max-width:80vw;white-space:pre-wrap}
+.toast.err{background:var(--red)}
+.modal{position:fixed;inset:0;background:rgba(20,24,32,.55);display:none;align-items:center;justify-content:center;z-index:40}
+.modal .in{background:#fff;border-radius:12px;padding:24px;width:340px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.diff{font-size:12.5px}.diff .old{color:#888;text-decoration:line-through}.diff .new{color:var(--ink)}
+.muted{color:var(--sub);font-size:12px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #ccc;border-top-color:var(--navy);border-radius:50%;animation:s 0.8s linear infinite;vertical-align:-2px}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><h1>보고서 작업 도우미</h1><span style="font-size:12px;opacity:.8">엑셀 통계표 → 한글 보고서 · 그래프 · 검증</span><span class="meta" id="meta"></span><button class="b ghost sm" style="margin-left:12px" onclick="if(confirm('지금 작업을 닫고 새 작업을 시작할까요? (지금 작업은 3일간 서버에 남습니다)'))newJob()">새 작업</button></header>
+<nav id="nav"></nav>
+<main>
+
+<!-- 1 -->
+<section id="s1">
+  <div class="card">
+    <h2>파일 올리기</h2>
+    <p class="desc">이 작업에 쓸 파일을 올립니다. 올린 파일과 결과물은 서버에 3일간 보관됩니다.</p>
+    <div class="grid g4" id="drops"></div>
+  </div>
+  <div class="card" id="tblCard" style="display:none">
+    <div class="row"><h2>엑셀 표 목록</h2><span class="sp"></span><span class="muted" id="tblCount"></span></div>
+    <div class="scroll" style="margin-top:10px"><table class="t" id="tblList"></table></div>
+  </div>
+  <div class="card" id="setCard" style="display:none">
+    <h2>보고서 설정</h2>
+    <p class="desc">특성별 결과에 쓸 구분은 <b>누른 순서</b>대로 문단이 만들어집니다.</p>
+    <label class="f">특성별 결과 구분 (사례수가 최소 사례수 미만인 하위집단은 문장에서 빠짐)</label>
+    <div class="chips" id="groups"></div>
+    <div class="grid g4" style="margin-top:14px">
+      <div><label class="f">양식의 예시 표 (완성된 1개 페이지)</label><select id="sample"></select></div>
+      <div><label class="f">생성 시작 표 (비우면 예시 다음 표)</label><select id="start"></select></div>
+      <div><label class="f">생성 마지막 표 (비우면 끝까지)</label><select id="end"></select></div>
+      <div><label class="f">최소 사례수</label><input type="number" id="minn" min="1" value="10"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label class="row" style="gap:5px"><input type="checkbox" id="fillSample"> 예시 페이지 문구도 새로 쓰기</label>
+      <label class="row" style="gap:5px;margin-left:14px"><input type="checkbox" id="scaleFull"> 척도 세부표도 문구·그래프 페이지로</label>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div><label class="f">문장 속 보기 축약 (한 줄에 하나: 원문=축약)</label><textarea id="abbr" rows="3" placeholder="한국어능력시험(TOPIK)=TOPIK"></textarea></div>
+      <div><label class="f">표 제목 바꾸기 (한 줄에 하나: 표번호=새 제목, 같은 번호가 여럿이면 3-1|Base원문=새 제목)</label><textarea id="titles" rows="3" placeholder="3-1=최종학위 취득국가"></textarea></div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="row"><label class="f" style="margin:0">Base 문구 풀어쓰기</label><span class="sp"></span>
+        <button class="b ghost sm" id="baseAi">설문지 보고 AI가 풀어쓰기</button></div>
+      <div class="scroll" style="margin-top:6px;max-height:260px"><table class="t" id="baseTbl"></table></div>
+    </div>
+    <div class="row" style="margin-top:14px"><span class="sp"></span><button class="b" id="saveSet">설정 저장</button></div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <div class="card">
+    <div class="row"><div><h2>분석문구 (AI)</h2>
+      <p class="desc" style="margin:0">숫자는 엑셀식 반올림 값만 넘기고, Claude는 문장만 씁니다. 문장 속 수치가 표에 없으면 자동으로 한 번 고쳐 쓰고, 그래도 남으면 빨갛게 표시합니다.</p></div>
+      <span class="sp"></span>
+      <label class="row" style="gap:5px"><input type="checkbox" id="overwrite"> 이미 쓴 표도 다시</label>
+      <button class="b" id="genAll">전체 AI 작성</button></div>
+    <div class="prog" id="genProg" style="display:none"><i></i></div>
+    <div class="muted" id="genMsg"></div>
+    <div class="row" style="margin-top:8px">
+      <span class="muted">보기:</span>
+      <select id="txtFilter" style="width:auto"><option value="all">전체</option><option value="todo">아직 안 씀</option><option value="prob">수치 문제</option><option value="note">확인할 점 있음</option></select>
+    </div>
+  </div>
+  <div id="cards"></div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <div class="card">
+    <h2>① 한글 보고서 만들기</h2>
+    <p class="desc">양식의 예시 페이지를 복제해 표마다 소제목·문구·그래프 박스·통계표를 넣습니다. AI 문구가 없는 표는 규칙 문구로 들어갑니다. 만든 뒤 바로 숫자 대조를 합니다.</p>
+    <div class="row"><button class="b" id="build">한글 보고서 만들기</button><span id="buildOut"></span></div>
+    <div id="buildRes"></div>
+  </div>
+  <div class="card">
+    <h2>② PPT 그래프 만들기</h2>
+    <p class="desc">그래프 양식 PPT를 복제해 표마다 차트를 만듭니다. 내려받아 PowerPoint에서 손본 뒤 ③에 올리세요. 손볼 게 없으면 바로 ③으로 가도 됩니다.</p>
+    <div class="row"><button class="b" id="mkGraphs">그래프 PPT 만들기</button><span id="graphOut"></span></div>
+    <div id="graphRes"></div>
+  </div>
+  <div class="card">
+    <h2>③ 그래프를 한글에 넣기</h2>
+    <p class="desc">슬라이드 노트의 표 제목으로 그래프 박스를 찾아 300dpi 그림으로 넣습니다 (메타파일도 선택 가능). 다시 넣으면 이 도구가 넣은 그림만 교체하고, 직접 붙인 그림은 그대로 둡니다.</p>
+    <div class="grid g2">
+      <div class="drop" data-kind="graphs_edited"><b>손본 그래프 PPT (선택)</b><small>안 올리면 ②에서 만든 PPT 사용</small><div class="ok"></div><input type="file" accept=".pptx"></div>
+      <div class="drop" data-kind="emf_zip"><b>PowerPoint에서 저장한 EMF 묶음 (선택)</b><small>다른 이름으로 저장 → 확장 메타파일(*.emf) → 모든 슬라이드 → 폴더를 zip으로</small><div class="ok"></div><input type="file" accept=".zip"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label class="row" style="gap:5px"><input type="radio" name="emfsrc" value="lo"> 메타파일(EMF) 서버 변환</label>
+      <label class="row" style="gap:5px;margin-left:12px"><input type="radio" name="emfsrc" value="zip"> 메타파일(EMF) PowerPoint에서 저장한 것</label>
+      <label class="row" style="gap:5px;margin-left:12px"><input type="radio" name="emfsrc" value="png" checked> 그림 300dpi (기본, 어디서나 같게 보임)</label>
+      <label class="row" style="gap:5px;margin-left:12px"><input type="checkbox" id="replAll"> 직접 붙인 그림도 교체</label>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="b" id="insert">그래프 넣기</button><span id="insOut"></span></div>
+    <div id="insRes"></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <div class="card">
+    <h2>보고서 검증</h2>
+    <p class="desc">① 숫자 대조(스크립트): 통계표 칸마다·그래프 값·문구 속 수치를 엑셀과 대조 &nbsp; ② 규칙 점검: 문체, 소수 집단 언급, 다른 조사 문구, Base·캡션 &nbsp; ③ 내용 검토(AI): 해석·비교·순위가 표와 맞는지</p>
+    <div class="grid g2">
+      <div>
+        <label class="f">검증할 보고서</label>
+        <select id="revTarget"><option value="final">이 웹에서 만든 보고서 (그래프 포함본)</option><option value="report">이 웹에서 만든 보고서 (그래프 전)</option><option value="uploaded">직접 올린 보고서 (사람이 쓴 최종본 등)</option></select>
+      </div>
+      <div class="drop" data-kind="review_hwpx" id="revDrop" style="display:none"><b>검증할 한글 보고서 (.hwpx)</b><small>한글에서 '다른 이름으로 저장 → hwpx'</small><div class="ok"></div><input type="file" accept=".hwpx,.hwtx"></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="b" id="revStart">숫자 대조 + 규칙 점검</button><button class="b ghost" id="revAi" disabled>AI 내용 검토</button><span class="sp"></span><button class="b ghost" id="revXlsx" disabled>검증 결과 엑셀</button></div>
+    <div class="prog" id="revProg" style="display:none"><i></i></div>
+    <div id="revSum"></div>
+  </div>
+  <div class="card" id="revIssuesCard" style="display:none">
+    <div class="row"><h2>지적 사항</h2><span class="sp"></span>
+      <select id="revFilter" style="width:auto"><option value="">전체</option><option>오류</option><option>확인</option><option>제안</option></select>
+      <select id="revSrc" style="width:auto"><option value="">규칙+AI</option><option>규칙</option><option>AI</option></select></div>
+    <div class="scroll" style="max-height:620px;margin-top:10px"><table class="t" id="revTbl"></table></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <div class="card">
+    <h2>손본 보고서 문구 다시 쓰기</h2>
+    <p class="desc">한글에서 이미 손본 보고서의 분석문구만 다시 씁니다. 표·그래프·합친 페이지는 그대로 둡니다. AI가 <b>지금 보고서에 있는 문구</b>를 바탕으로 고칩니다.</p>
+    <div class="grid g4">
+      <div class="drop" data-kind="edited_hwpx" style="grid-column:span 2"><b class="req">손본 한글 보고서 (.hwpx)</b><small>첫 페이지가 설정의 '예시 표'여야 함</small><div class="ok"></div><input type="file" accept=".hwpx,.hwtx"></div>
+      <div><label class="f">앞에서 유지할 페이지 수</label><input type="number" id="rwKeep" value="0" min="0"></div>
+      <div><label class="f">고칠 부분</label><select id="rwPart"><option value="both">전체 결과 + 특성별 결과</option><option value="overall">전체 결과만</option><option value="group">특성별 결과만</option></select></div>
+    </div>
+    <label class="f" style="margin-top:10px">AI에게 요청 (선택, 모든 페이지에 적용)</label>
+    <input type="text" id="rwInst" placeholder="예: 특성별 결과를 더 짧게, 대표 집단 1~2개만">
+    <div class="row" style="margin-top:10px"><button class="b" id="rwPlan">페이지 읽기</button><button class="b ghost" id="rwRun" disabled>선택한 페이지 AI 다시 쓰기</button><button class="b ghost" id="rwApply" disabled>보고서에 반영</button><span id="rwOut"></span></div>
+    <div class="prog" id="rwProg" style="display:none"><i></i></div>
+  </div>
+  <div id="rwList"></div>
+</section>
+</main>
+
+<div class="modal" id="login"><div class="in"><h2 style="margin:0 0 6px;font-size:16px">팀 비밀번호</h2><p class="muted" style="margin:0 0 12px">관리자에게 받은 비밀번호를 입력하세요.</p>
+<input type="password" id="pw"><div class="row" style="margin-top:12px"><span class="sp"></span><button class="b" id="pwGo">들어가기</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let CFG={}, SID=null, S={tables:[],groups:{},bases:[],settings:{},texts:{},outputs:{},files:{}}, PW=sessionStorage.getItem('hwtx_pw')||'';
+let groupOrder=[], baseAiNotes={};
+
+function toast(m,err){const t=$('#toast');t.textContent=m;t.className='toast'+(err?' err':'');t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',err?7000:2600)}
+async function api(path,opt={}){
+  opt.headers=Object.assign({},opt.headers||{},PW?{'X-App-Password':PW}:{});
+  if(opt.json!==undefined){opt.body=JSON.stringify(opt.json);opt.headers['Content-Type']='application/json';delete opt.json}
+  const r=await fetch(path,opt);
+  if(r.status===401){$('#login').style.display='flex';throw new Error('비밀번호가 필요합니다')}
+  const ct=r.headers.get('content-type')||'';
+  if(!r.ok){let m=r.statusText;try{m=(await r.json()).error||m}catch(e){}throw new Error(m)}
+  return ct.includes('json')?r.json():r;
+}
+async function download(path,name){
+  try{const r=await api(path);const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);
+    const cd=r.headers.get('content-disposition')||'';const m=/filename\*=utf-8''([^;]+)/i.exec(cd);a.download=m?decodeURIComponent(m[1]):(name||'download');a.click()}
+  catch(e){toast(e.message,true)}
+}
+function dl(file,label){return `<button class="b ghost sm" onclick="download('/api/s/${SID}/download/${encodeURIComponent(file)}','${esc(file)}')">⬇ ${esc(label||file)}</button>`}
+async function pool(items,n,fn,onDone){let i=0,done=0;const run=async()=>{while(i<items.length){const it=items[i++];try{await fn(it)}catch(e){console.error(e);it._err=e.message}done++;onDone&&onDone(done,items.length)}};await Promise.all(Array.from({length:Math.min(n,items.length)},run))}
+function prog(sel,d,n){const p=$(sel);p.style.display=d<n?'block':'none';p.querySelector('i').style.width=(100*d/Math.max(n,1))+'%'}
+
+// ---------------------------------------------------------------- 탭
+const TABS=[['s1','파일·설정'],['s2','분석문구'],['s3','보고서·그래프'],['s4','검증'],['s5','손본 보고서 문구']];
+$('#nav').innerHTML=TABS.map(([id,l],i)=>`<button data-s="${id}"><span class="n">${i+1}</span>${l}</button>`).join('');
+function tab(id){$$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id));$$('section').forEach(s=>s.classList.toggle('on',s.id===id));if(id==='s2')renderCards();location.hash=id}
+$$('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.s));
+
+// ---------------------------------------------------------------- 파일
+const DROPS=[['excel','통계표 엑셀 (.xlsx)','회사 표준 형식 (<표x-y> 제목, BASE, ▩전체▩)',true,'.xlsx'],
+ ['template','양식 한글 (.hwpx/.hwtx)','예시 표 1개 페이지가 완성된 파일',true,'.hwpx,.hwtx'],
+ ['graph_template','그래프 양식 PPT (.pptx)','그래프를 만들 때만 필요',false,'.pptx'],
+ ['questionnaire','설문지 (선택)','Base 풀어쓰기에 사용 · pdf/docx/hwpx',false,'.pdf,.docx,.hwpx,.txt']];
+$('#drops').innerHTML=DROPS.map(([k,t,d,req,acc])=>`<div class="drop" data-kind="${k}"><b class="${req?'req':''}">${t}</b><small>${d}</small><div class="ok"></div><input type="file" accept="${acc}"></div>`).join('');
+function bindDrops(){$$('.drop').forEach(d=>{if(d._b)return;d._b=1;const inp=d.querySelector('input');d.onclick=e=>{if(e.target!==inp)inp.click()};
+  d.ondragover=e=>{e.preventDefault();d.style.borderColor='#2c436e'};d.ondragleave=()=>d.style.borderColor='';
+  d.ondrop=e=>{e.preventDefault();d.style.borderColor='';if(e.dataTransfer.files[0])up(d.dataset.kind,e.dataTransfer.files[0])};
+  inp.onchange=()=>inp.files[0]&&up(d.dataset.kind,inp.files[0])})}
+bindDrops();
+async function ensureSid(){if(SID)return;const r=await api('/api/session',{method:'POST'});SID=r.sid;localStorage.setItem('hwtx_sid',SID)}
+async function up(kind,file){
+  try{await ensureSid();const fd=new FormData();fd.append('file',file);
+    $$(`.drop[data-kind=${kind}] .ok`).forEach(o=>o.innerHTML='<span class="spin"></span> 올리는 중…');
+    const r=await api(`/api/s/${SID}/file/${kind}`,{method:'POST',body:fd});
+    S.files[kind]=file.name;markFiles();
+    if(r.tables){Object.assign(S,{tables:r.tables,groups:r.groups,bases:r.bases,settings:r.settings});renderSetup();toast('엑셀 표 '+r.tables.length+'개를 읽었습니다')}
+  }catch(e){toast(e.message,true);markFiles()}
+}
+function markFiles(){$$('.drop').forEach(d=>{const n=S.files[d.dataset.kind];d.querySelector('.ok').innerHTML=n?'✓ '+esc(n):''})}
+
+// ---------------------------------------------------------------- 설정
+function typeTag(t){let s='';if(t.type==='summary')s+='<span class="tag">요약표</span>';if(t.type==='scale')s+='<span class="tag gray">척도 세부</span>';if(t.multi)s+='<span class="tag">중복응답</span>';if(t.mean)s+=`<span class="tag">평균(${esc(t.unit)})</span>`;return s}
+function renderSetup(){
+  const st=S.settings||{};
+  $('#tblCard').style.display=$('#setCard').style.display=S.tables.length?'block':'none';
+  $('#tblCount').textContent=`표 ${S.tables.length}개`;
+  $('#tblList').innerHTML='<tr><th>번호</th><th>제목</th><th>Base</th><th>사례수</th><th>보기</th><th>유형</th></tr>'+S.tables.map(t=>`<tr><td>${esc(t.num)}</td><td>${esc(t.title)}</td><td>${esc(t.base)}</td><td>${t.n.toLocaleString()}</td><td>${t.items.length}</td><td>${typeTag(t)}</td></tr>`).join('');
+  groupOrder=(st.groups||[]).filter(g=>S.groups[g]);
+  renderGroups();
+  const opts=(blank)=>(blank?'<option value="">(자동)</option>':'')+[...new Map(S.tables.map(t=>[t.num,t])).values()].map(t=>`<option value="${esc(t.num)}">${esc(t.num)} ${esc(t.title)}</option>`).join('');
+  $('#sample').innerHTML=opts(false);$('#start').innerHTML=opts(true);$('#end').innerHTML=opts(true);
+  $('#sample').value=st.sample||(S.tables.find(t=>t.num.includes('-')&&t.type!=='scale')||S.tables[0]||{}).num||'';
+  $('#start').value=st.start||'';$('#end').value=st.end||'';$('#minn').value=st.min_n||10;
+  $('#fillSample').checked=!!st.fill_sample;$('#scaleFull').checked=!!st.scale_full;
+  $('#abbr').value=Object.entries(st.abbr||{}).map(([k,v])=>k+'='+v).join('\n');
+  $('#titles').value=Object.entries(st.title||{}).map(([k,v])=>k+'='+v).join('\n');
+  renderBases(st.base||{});
+}
+function renderGroups(){
+  $('#groups').innerHTML=Object.entries(S.groups).map(([g,subs])=>{const i=groupOrder.indexOf(g);const minn=+$('#minn').value||10;
+    const small=subs.filter(x=>x.n<minn).map(x=>x.label);
+    return `<div class="chip ${i>=0?'on':''}" data-g="${esc(g)}" title="${esc(subs.map(x=>x.label+'('+x.n+')').join(', '))}"><span class="ord">${i>=0?i+1:''}</span><b>${esc(g)}</b><small>${subs.length}개${small.length?' · 제외 '+small.length:''}</small>${i>=0?`<button data-mv="-1">◀</button><button data-mv="1">▶</button>`:''}</div>`}).join('');
+  $$('#groups .chip').forEach(c=>c.onclick=e=>{const g=c.dataset.g;const mv=e.target.dataset.mv;
+    if(mv){const i=groupOrder.indexOf(g),j=i+(+mv);if(j>=0&&j<groupOrder.length){[groupOrder[i],groupOrder[j]]=[groupOrder[j],groupOrder[i]]}}
+    else{const i=groupOrder.indexOf(g);i>=0?groupOrder.splice(i,1):groupOrder.push(g)}renderGroups()});
+}
+$('#minn').oninput=renderGroups;
+function renderBases(m){
+  $('#baseTbl').innerHTML='<tr><th style="width:44%">엑셀 BASE 원문</th><th>보고서에 쓸 말</th></tr>'+S.bases.filter(b=>b&&b!=='전체').map(b=>`<tr><td>${esc(b)}${baseAiNotes[b]?`<div class="muted">${esc(baseAiNotes[b])}</div>`:''}</td><td><input type="text" data-b="${esc(b)}" value="${esc(m[b]||'')}" placeholder="(그대로)"></td></tr>`).join('')||'<tr><td class="muted">풀어 쓸 Base가 없습니다</td></tr>';
+}
+function lines(v){const o={};v.split('\n').map(x=>x.trim()).filter(x=>x.includes('=')).forEach(x=>{const i=x.indexOf('=');o[x.slice(0,i).trim()]=x.slice(i+1).trim()});return o}
+function collect(){const base={};$$('#baseTbl input').forEach(i=>{if(i.value.trim())base[i.dataset.b]=i.value.trim()});
+  return {sample:$('#sample').value||null,start:$('#start').value||null,end:$('#end').value||null,groups:groupOrder,min_n:+$('#minn').value||10,
+    abbr:lines($('#abbr').value),title:lines($('#titles').value),base,fill_sample:$('#fillSample').checked,scale_full:$('#scaleFull').checked}}
+async function saveSettings(quiet){
+  if(!SID||!S.tables.length)throw new Error('통계표 엑셀을 먼저 올려 주세요');
+  const r=await api(`/api/s/${SID}/settings`,{method:'POST',json:collect()});
+  Object.assign(S,{tables:r.tables,groups:r.groups,bases:r.bases,settings:r.settings});if(!quiet){renderSetup();toast('설정을 저장했습니다')}
+}
+$('#saveSet').onclick=()=>saveSettings().catch(e=>toast(e.message,true));
+$('#baseAi').onclick=async()=>{const b=$('#baseAi');b.disabled=true;b.innerHTML='<span class="spin"></span> 설문지 읽는 중…';
+  try{const r=await api(`/api/s/${SID}/bases/ai`,{method:'POST'});baseAiNotes=r.notes||{};const cur=collect().base;
+    renderBases(Object.assign({},r.map,cur));toast('제안을 채웠습니다. 확인 후 설정 저장을 누르세요')}catch(e){toast(e.message,true)}
+  b.disabled=false;b.textContent='설문지 보고 AI가 풀어쓰기'};
+
+// ---------------------------------------------------------------- 분석문구
+function targets(){
+  const st=S.settings||{};const T=S.tables;if(!st.sample)return[];
+  const iS=T.findIndex(t=>t.num===st.sample);let i0=st.start?T.findIndex(t=>t.num===st.start):iS+1;
+  let i1=st.end?T.map(t=>t.num).lastIndexOf(st.end)+1:T.length;
+  const out=T.slice(i0,i1).filter(t=>t.type!=='scale');if(st.fill_sample&&T[iS])out.unshift(T[iS]);return out}
+function textState(t){const x=S.texts[t.idx];if(!x)return'todo';if((x.problems||[]).length)return'prob';if((x.notes||[]).length)return'note';return'ok'}
+function renderCards(){
+  const T=targets();const f=$('#txtFilter').value;
+  if(!T.length){$('#cards').innerHTML='<div class="card muted">1단계에서 엑셀을 올리고 예시 표·특성별 구분을 정한 뒤 설정 저장을 누르세요.</div>';return}
+  const cnt=T.filter(t=>S.texts[t.idx]).length;$('#genMsg').textContent=`대상 표 ${T.length}개 · AI 문구 ${cnt}개 · 특성별 구분: ${(S.settings.groups||[]).join(' → ')||'(없음)'}`;
+  $('#cards').innerHTML=T.filter(t=>f==='all'||textState(t)===f||(f==='todo'&&!S.texts[t.idx])).map(cardHtml).join('');
+  $$('#cards .tcard').forEach(bindCard);
+}
+function cardHtml(t){const x=S.texts[t.idx];const st=textState(t);
+  const badge={todo:'<span class="tag gray">규칙 문구</span>',prob:'<span class="tag red">수치 확인</span>',note:'<span class="tag amber">확인할 점</span>',ok:'<span class="tag green">AI 문구</span>'}[st];
+  const vals=t.items.slice().sort((a,b)=>b.total-a.total).slice(0,6).map(i=>`<span>‘${esc(i.name.slice(0,22))}’ ${esc(i.total)}</span>`).join('');
+  return `<div class="tcard" data-idx="${t.idx}"><div class="hd"><b>&lt;표${esc(t.num)}&gt; ${esc(t.title)}</b>${typeTag(t)}<span class="sp"></span>${badge}</div>
+  <div class="bd"><div class="vals">n=${t.n.toLocaleString()} · ${vals}</div>
+  ${x&&(x.problems||[]).length?`<div class="box red">표에 없는 수치: ${x.problems.map(esc).join('<br>')}</div>`:''}
+  ${x&&(x.notes||[]).length?`<div class="box amber">${x.notes.map(esc).join('<br>')}</div>`:''}
+  <label class="f">가. 전체 결과 (한 줄 = 한 문단)</label><textarea class="ov" rows="3">${esc((x?.overall||[]).join('\n'))}</textarea>
+  <label class="f" style="margin-top:8px">나. 특성별 결과</label><textarea class="gr" rows="${Math.max(3,(x?.group||[]).length+1)}">${esc((x?.group||[]).join('\n'))}</textarea>
+  <div class="ruleBox"></div>
+  <div class="row" style="margin-top:8px"><input type="text" class="inst" placeholder="다시 쓸 때 요청 (예: 더 짧게 / 평균 기준으로 / 국적은 상위 3개만)" style="flex:1;min-width:220px">
+   <button class="b sm gen">${x?'AI 다시 쓰기':'AI 작성'}</button><button class="b ghost sm save">수정 저장</button><button class="b ghost sm rule">규칙 초안</button>${x?'<button class="b ghost sm drop2">AI 문구 지우기</button>':''}</div></div></div>`}
+function bindCard(c){const idx=c.dataset.idx;
+  c.querySelector('.hd').onclick=()=>c.classList.toggle('open');
+  c.querySelector('.gen').onclick=async e=>{const b=e.target;b.disabled=true;b.innerHTML='<span class="spin"></span>';
+    const x=S.texts[idx];const inst=c.querySelector('.inst').value;
+    try{const prev=x?{overall:c.querySelector('.ov').value.split('\n').filter(Boolean),group:c.querySelector('.gr').value.split('\n').filter(Boolean)}:null;
+      const r=await api(`/api/s/${SID}/text/${idx}`,{method:'POST',json:{instruction:inst,previous:inst?prev:null}});
+      S.texts[idx]={overall:r.overall,group:r.group,notes:r.notes,problems:r.problems,source:'ai'};rerenderCard(idx,true)}
+    catch(er){toast(er.message,true);b.disabled=false;b.textContent='AI 작성'}};
+  c.querySelector('.save').onclick=async()=>{try{const ov=c.querySelector('.ov').value.split('\n'),gr=c.querySelector('.gr').value.split('\n');
+    const r=await api(`/api/s/${SID}/text/${idx}`,{method:'PUT',json:{overall:ov,group:gr}});
+    S.texts[idx]=Object.assign(S.texts[idx]||{},{overall:ov.filter(s=>s.trim()),group:gr.filter(s=>s.trim()),problems:r.problems,source:'edit'});
+    rerenderCard(idx,true);toast(r.problems.length?'저장했지만 표에 없는 수치가 있습니다':'저장했습니다',r.problems.length>0)}catch(er){toast(er.message,true)}};
+  c.querySelector('.rule').onclick=async()=>{try{const r=await api(`/api/s/${SID}/rule/${idx}`);
+    c.querySelector('.ruleBox').innerHTML=`<div class="box gray"><b>규칙 초안 (수치 정확)</b><br>${r.rule.overall.map(esc).join('<br>')}<br>${r.rule.group.map(esc).join('<br>')}</div>`}catch(er){toast(er.message,true)}};
+  const d2=c.querySelector('.drop2');if(d2)d2.onclick=async()=>{await api(`/api/s/${SID}/text/${idx}`,{method:'DELETE'});delete S.texts[idx];rerenderCard(idx,true)};
+}
+function rerenderCard(idx,open){const t=S.tables.find(x=>x.idx===idx);const old=$(`.tcard[data-idx="${idx}"]`);if(!old)return;
+  const w=document.createElement('div');w.innerHTML=cardHtml(t);const n=w.firstElementChild;old.replaceWith(n);if(open)n.classList.add('open');bindCard(n)}
+$('#txtFilter').onchange=renderCards;
+$('#genAll').onclick=async()=>{const b=$('#genAll');
+  const T=targets().filter(t=>$('#overwrite').checked||!S.texts[t.idx]);if(!T.length)return toast('새로 쓸 표가 없습니다');
+  if(!CFG.ai)return toast('서버에 API 키가 설정되지 않았습니다',true);
+  b.disabled=true;let fails=0;
+  await pool(T,4,async t=>{const r=await api(`/api/s/${SID}/text/${t.idx}`,{method:'POST',json:{}});S.texts[t.idx]={overall:r.overall,group:r.group,notes:r.notes,problems:r.problems,source:'ai'};rerenderCard(t.idx)},
+    (d,n)=>{prog('#genProg',d,n);$('#genMsg').textContent=`AI 작성 중 ${d}/${n}`});
+  fails=T.filter(t=>t._err).length;b.disabled=false;renderCards();
+  toast(fails?`${fails}개 표는 실패했습니다. 카드에서 다시 시도하세요`:'모든 표 작성 완료',fails>0)};
+
+// ---------------------------------------------------------------- 보고서·그래프
+function verBox(v){if(!v)return'';const cls=v.ok?'green':'red';const rows=v.rows.slice(0,40).map(r=>`<div>${r.심각도==='오류'?'✗':r.심각도==='경고'?'!':'?'} ${esc(r.내용)}</div>`).join('');
+  return `<div class="box ${cls}"><b>숫자 대조</b> ${esc(v.summary)}${rows?'<div style="margin-top:6px;max-height:200px;overflow:auto">'+rows+(v.rows.length>40?`<div>… 외 ${v.rows.length-40}건 (검증 탭에서 전체 보기)</div>`:'')+'</div>':''}</div>`}
+async function busy(btn,label,fn){const t=btn.textContent;btn.disabled=true;btn.innerHTML=`<span class="spin"></span> ${label}`;try{await fn()}catch(e){toast(e.message,true)}btn.disabled=false;btn.textContent=t}
+$('#build').onclick=()=>busy($('#build'),'만드는 중…',async()=>{await saveSettings(true).catch(()=>{});
+  const r=await api(`/api/s/${SID}/build`,{method:'POST'});S.outputs.report={file:r.file};
+  $('#buildOut').innerHTML=dl(r.file,'한글 보고서 (그래프 전)');
+  $('#buildRes').innerHTML=`<div class="muted" style="margin-top:8px">AI·수정 문구 ${r.ai_texts}개 표 반영 (나머지는 규칙 문구)</div>`+verBox(r.verify)+`<details><summary class="muted">실행 기록</summary><pre class="log">${esc(r.log)}</pre></details>`});
+$('#mkGraphs').onclick=()=>busy($('#mkGraphs'),'만드는 중…',async()=>{const r=await api(`/api/s/${SID}/graphs`,{method:'POST'});S.outputs.graphs={file:r.file};
+  $('#graphOut').innerHTML=dl(r.file,'그래프 PPT');
+  const fb=(r.log.match(/\(양식에 .*?\)/g)||[]);
+  $('#graphRes').innerHTML=(fb.length?`<div class="box amber">${fb.map(esc).join('<br>')}<br>평균·척도·도넛 그래프도 쓰려면 그래프 양식 PPT에 해당 양식 슬라이드를 넣어 주세요.</div>`:'')+verBox(r.verify)+`<details><summary class="muted">실행 기록</summary><pre class="log">${esc(r.log)}</pre></details>`});
+$('#insert').onclick=()=>busy($('#insert'),'그래프 넣는 중…',async()=>{
+  const r=await api(`/api/s/${SID}/insert`,{method:'POST',json:{target:'report',use_edited_pptx:true,use_emf_zip:document.querySelector('input[name=emfsrc]:checked').value==='zip',format:document.querySelector('input[name=emfsrc]:checked').value==='png'?'png':'emf',replace_all:$('#replAll').checked}});
+  S.outputs.final={file:r.file};$('#insOut').innerHTML=dl(r.file,'한글 보고서 (그래프 포함)');
+  $('#insRes').innerHTML=`<div class="box ${r.missing||r.skipped?'amber':'green'}">그래프 ${r.inserted}개 넣음 · 건너뜀 ${r.skipped} · 맞는 슬라이드 없음 ${r.missing} <span class="muted">(${esc(r.pptx)}, ${esc(r.emf)})</span></div><details><summary class="muted">실행 기록</summary><pre class="log">${esc(r.log)}</pre></details>`});
+
+// ---------------------------------------------------------------- 검증
+let REV=null;
+$('#revTarget').onchange=()=>{$('#revDrop').style.display=$('#revTarget').value==='uploaded'?'block':'none'};
+$('#revStart').onclick=()=>busy($('#revStart'),'대조 중…',async()=>{
+  REV=await api(`/api/s/${SID}/review`,{method:'POST',json:{target:$('#revTarget').value}});
+  $('#revAi').disabled=!CFG.ai;$('#revXlsx').disabled=false;renderRev()});
+$('#revAi').onclick=async()=>{const b=$('#revAi');b.disabled=true;const pages=REV.pages.filter(p=>p.table!==null);
+  await pool(pages,4,async p=>{const r=await api(`/api/s/${SID}/review/ai/${p.page}`,{method:'POST'});
+    REV.issues=REV.issues.filter(x=>!(x.page===p.page&&x.출처==='AI')).concat(r.issues);REV.ai_done=(REV.ai_done||[]).concat([p.page]);renderRev()},
+    (d,n)=>prog('#revProg',d,n));
+  const f=pages.filter(p=>p._err).length;b.disabled=false;toast(f?`${f}개 페이지는 AI 검토에 실패했습니다`:'AI 내용 검토 완료',f>0)};
+$('#revXlsx').onclick=()=>download(`/api/s/${SID}/review.xlsx`,'검증결과.xlsx');
+$('#revFilter').onchange=$('#revSrc').onchange=()=>renderRev();
+function renderRev(){if(!REV)return;const v=REV.numeric;const um=REV.pages.filter(p=>p.table===null);
+  const cnt=k=>REV.issues.filter(x=>x.심각도===k).length;
+  $('#revSum').innerHTML=verBox(v)+`<div class="box gray">페이지 ${REV.pages.length}개 · 엑셀 표와 연결 ${REV.pages.length-um.length}개${um.length?` · <b>연결 못 한 페이지 ${um.length}개</b>: ${um.map(p=>esc(p.title)).join(', ')}`:''}<br>지적 사항: 오류 ${cnt('오류')} · 확인 ${cnt('확인')} · 제안 ${cnt('제안')} · AI 검토한 페이지 ${(REV.ai_done||[]).length}/${REV.pages.length-um.length}</div>`;
+  $('#revIssuesCard').style.display='block';const f=$('#revFilter').value,s=$('#revSrc').value;const ord={'오류':0,'확인':1,'제안':2};
+  const items=REV.issues.filter(x=>(!f||x.심각도===f)&&(!s||x.출처===s)).sort((a,b)=>a.page-b.page||(ord[a.심각도]??3)-(ord[b.심각도]??3));
+  const title=p=>(REV.pages.find(x=>x.page===p)||{}).title||'';
+  $('#revTbl').innerHTML='<tr><th>쪽</th><th>표</th><th>위치</th><th>심각도</th><th>문제 / 근거</th><th>문장 → 수정 제안</th><th>출처</th></tr>'+items.map(x=>`<tr><td>${x.page}</td><td>${esc(x.num||'')}<div class="muted">${esc(title(x.page)).slice(0,24)}</div></td><td>${esc(x.위치)}</td><td><span class="tag ${x.심각도==='오류'?'red':x.심각도==='확인'?'amber':''}">${esc(x.심각도)}</span></td><td>${esc(x.문제)}${x.근거?`<div class="muted">${esc(x.근거)}</div>`:''}</td><td>${x.문장?`<div class="muted">${esc(x.문장)}</div>`:''}${x.수정제안?`<div>→ ${esc(x.수정제안)}</div>`:''}</td><td>${esc(x.출처)}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">지적 사항이 없습니다</td></tr>';
+}
+
+// ---------------------------------------------------------------- 손본 보고서 문구
+let PLAN=[],RW={};
+$('#rwPlan').onclick=()=>busy($('#rwPlan'),'읽는 중…',async()=>{await saveSettings(true).catch(()=>{});
+  const r=await api(`/api/s/${SID}/rewrite/plan`,{method:'POST',json:{keep:+$('#rwKeep').value||0,part:$('#rwPart').value}});PLAN=r.plan;RW={};
+  $('#rwRun').disabled=!CFG.ai;renderRw()});
+function renderRw(){$('#rwList').innerHTML=PLAN.map(p=>{const res=p.tables.map(i=>RW[i]).filter(Boolean);
+  return `<div class="tcard open"><div class="hd"><input type="checkbox" class="rwc" data-p="${p.page}" ${p.keep||p.merged?'':'checked'} ${p.merged?'disabled title="하위표를 합친 페이지는 AI 다시 쓰기에서 빠집니다 (지금 문구 유지)"':''}><b>${p.page}쪽 · ${esc(p.title)}</b><span class="muted">${p.nums.map(n=>'&lt;표'+esc(n)+'&gt;').join(' ')}</span>${p.merged?'<span class="tag amber">합친 페이지</span>':''}${p.keep?'<span class="tag gray">유지</span>':''}<span class="sp"></span>${res.length?'<span class="tag green">새 문구</span>':''}</div>
+  <div class="bd"><div class="two"><div class="diff"><div class="muted">지금 문구</div>${p.overall.concat(p.group).map(s=>`<div>${esc(s)}</div>`).join('')}</div>
+  <div class="diff"><div class="muted">새 문구</div>${res.map(r=>r.overall.concat(r.group).map(s=>`<div class="new">${esc(s)}</div>`).join('')+(r.problems?.length?`<div class="box red">${r.problems.map(esc).join('<br>')}</div>`:'')).join('')||'<div class="muted">-</div>'}</div></div></div></div>`}).join('')}
+$('#rwRun').onclick=async()=>{const b=$('#rwRun');b.disabled=true;const sel=new Set($$('.rwc:checked').map(c=>+c.dataset.p));
+  const jobs=[];PLAN.filter(p=>sel.has(p.page)).forEach(p=>p.tables.forEach(i=>jobs.push({p,i})));
+  const part=$('#rwPart').value;
+  await pool(jobs,4,async j=>{const prev={overall:j.p.overall,group:j.p.group};
+    const r=await api(`/api/s/${SID}/text/${j.i}`,{method:'POST',json:{instruction:$('#rwInst').value||'지금 문구의 표현과 어투를 최대한 살리되, 표 정보와 맞지 않는 수치·해석을 바로잡고 문구 규칙에 맞게 다듬는다',previous:j.p.merged?null:prev,part,store:false}});
+    RW[j.i]={overall:part==='group'?[]:r.overall,group:part==='overall'?[]:r.group,problems:r.problems}},(d,n)=>prog('#rwProg',d,n));
+  b.disabled=false;$('#rwApply').disabled=false;renderRw()};
+$('#rwApply').onclick=()=>busy($('#rwApply'),'반영 중…',async()=>{const texts={};Object.entries(RW).forEach(([k,v])=>{texts[k]={overall:v.overall,group:v.group}});
+  const r=await api(`/api/s/${SID}/rewrite/apply`,{method:'POST',json:{keep:+$('#rwKeep').value||0,part:$('#rwPart').value,texts}});
+  $('#rwOut').innerHTML=dl(r.file,'문구 고친 보고서')});
+
+// ---------------------------------------------------------------- 시작
+$('#pwGo').onclick=async()=>{PW=$('#pw').value;try{await api('/api/login',{method:'POST'});sessionStorage.setItem('hwtx_pw',PW);$('#login').style.display='none';boot()}catch(e){toast(e.message,true)}};
+$('#pw').onkeydown=e=>{if(e.key==='Enter')$('#pwGo').click()};
+async function boot(){
+  CFG=await api('/api/config');
+  $('#meta').innerHTML=CFG.ai?`AI: ${esc(CFG.model)}${CFG.fake?' (테스트 모드)':''}`:'<span style="color:#ffd27a">API 키 없음 — 규칙 문구만 사용</span>';
+  if(CFG.password&&!PW){$('#login').style.display='flex';return}
+  const sid=localStorage.getItem('hwtx_sid');
+  if(sid){try{const r=await api(`/api/s/${sid}`);SID=sid;Object.assign(S,r);S.files=r.files||{};S.outputs=r.outputs||{};markFiles();if(r.tables)renderSetup();
+    if(S.outputs.report)$('#buildOut').innerHTML=dl(S.outputs.report.file,'한글 보고서 (그래프 전)');
+    if(S.outputs.graphs)$('#graphOut').innerHTML=dl(S.outputs.graphs.file,'그래프 PPT');
+    if(S.outputs.final)$('#insOut').innerHTML=dl(S.outputs.final.file,'한글 보고서 (그래프 포함)');
+  }catch(e){localStorage.removeItem('hwtx_sid')}}
+  tab((location.hash||'#s1').slice(1));
+}
+function newJob(){localStorage.removeItem('hwtx_sid');location.hash='';location.reload()}
+boot().catch(e=>toast(e.message,true));
+</script>
+</body>
+</html>
